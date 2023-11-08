@@ -84,6 +84,20 @@ function Update() {
     velocityY += gravity; // Apply gravity
     doodler.y += velocityY; // Move player
     context.drawImage(doodler.img, doodler.x, doodler.y, doodler.width, doodler.height);
+
+    // Platforms
+    for (let i = 0; i < platformArray.length; i++) {
+        let platform = platformArray[i];
+        if (velocityY < 0 && doodler.y < boardHeight*3/4) { /* If doodler is falling down
+                                                            (althoug it is positive direction,
+                                                            velocity is negative due to gravity) and 
+                                                            if a doodler is above the middle of the board */
+        }
+         if (detectCollision(doodler, platform) && velocityY >= 0) {
+            velocityY = initialVelocityY; // Reset jump velocity
+        }
+        context.drawImage(platformArray[i].img, platformArray[i].x, platformArray[i].y, platformArray[i].width, platformArray[i].height);
+    }
 }
 
 function moveDoodler(e) {
@@ -98,8 +112,50 @@ function moveDoodler(e) {
 }
 
 function PlacePlatforms() {
+    platformArray = [];
 
+    // Starting platform
+    let platform = {
+        img : platformImg,
+        x : boardWidth/2,
+        y : boardHeight - 50,
+        width : platformWidth,
+        height : platformHeight
+    }
+
+    platformArray.push(platform);
+
+    // Randomly place platforms
+    for (let i = 0; i < 6; i++){
+        let randomX = Math.floor(Math.random() * (boardWidth - platformWidth*3/4)); // (0-1) * boardWidth*3/4
+        let platform = {
+            img : platformImg,
+            x : randomX,
+            y : boardHeight - 75*i - 150, /* i is going to be 0, 1, 2, 3, 4, 5 and 
+                                            it is going to create an additional space
+                                            75 pixels between each platform*/
+            width : platformWidth,
+            height : platformHeight
+        }
+
+        platformArray.push(platform);
+    }
 }
+
+function newPlatform() {
+    let randomX = Math.floor(Math.random() * (boardWidth - platformWidth*3/4)); // (0-1) * boardWidth*3/4
+        let platform = {
+            img : platformImg,
+            x : randomX,
+            y : -platformHeight, // 0 is a top of canvas, so we need to start from -platformHeight
+            width : platformWidth,
+            height : platformHeight
+        }
+
+        platformArray.push(platform);
+}
+
+// As soon as one platform goes off the screen, we need to create a new one
 
 // When doodler lands on a platform it should bounce up
 function detectCollision(a,b) {
