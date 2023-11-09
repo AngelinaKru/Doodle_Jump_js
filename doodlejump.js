@@ -8,7 +8,7 @@ let context;
 // Player/Doodler
 let doodlerWidth = 46;
 let doodlerHeight = 46;
-//position of the doodler
+//Initial position of the doodler
 let doodlerX = boardWidth/2 - doodlerWidth/2;
 let doodlerY = boardHeight*7/8 - doodlerHeight;
 let doodlerRightImg;
@@ -22,6 +22,7 @@ let doodler = {
     height: doodlerHeight
 }
 
+
 // Physics
 let velocityX = 0;
 let velocityY = 0; // Doodler jump velocity
@@ -34,6 +35,8 @@ let platformArray = [];
 let platformWidth = 60;
 let platformHeight = 18;
 let platformImg;
+
+let score = 0;
 
 // Load the game
 window.onload = function () {
@@ -60,7 +63,7 @@ window.onload = function () {
     velocityY = initialVelocityY; // Set initial jump velocity
 
     // Create platforms
-    PlacePlatforms();
+    placePlatforms();
 
     //Game needs a loop to run continuously to update the game state
     requestAnimationFrame(Update);
@@ -92,12 +95,25 @@ function Update() {
                                                             (althoug it is positive direction,
                                                             velocity is negative due to gravity) and 
                                                             if a doodler is above the middle of the board */
+            platform.y -= velocityY; // Move platforms down                                                
         }
          if (detectCollision(doodler, platform) && velocityY >= 0) {
             velocityY = initialVelocityY; // Reset jump velocity
         }
         context.drawImage(platformArray[i].img, platformArray[i].x, platformArray[i].y, platformArray[i].width, platformArray[i].height);
     }
+
+    // Loop , that removes platforms that go off the screen and creates new ones
+    while (platformArray.length > 0 && platformArray[0].y >= boardHeight) {
+        platformArray.shift(); // Remove first element from the array
+        newPlatform();
+    }
+
+    // Score
+    updateScore();
+    context.fillStyle = "black";
+    context.font = "16px sans-serif";
+    context.fillText("Score: " + score, 10, 20);
 }
 
 function moveDoodler(e) {
@@ -111,7 +127,7 @@ function moveDoodler(e) {
     }
 }
 
-function PlacePlatforms() {
+function placePlatforms() {
     platformArray = [];
 
     // Starting platform
@@ -142,6 +158,7 @@ function PlacePlatforms() {
     }
 }
 
+// Create new platform and add it to the array
 function newPlatform() {
     let randomX = Math.floor(Math.random() * (boardWidth - platformWidth*3/4)); // (0-1) * boardWidth*3/4
         let platform = {
@@ -155,7 +172,6 @@ function newPlatform() {
         platformArray.push(platform);
 }
 
-// As soon as one platform goes off the screen, we need to create a new one
 
 // When doodler lands on a platform it should bounce up
 function detectCollision(a,b) {
