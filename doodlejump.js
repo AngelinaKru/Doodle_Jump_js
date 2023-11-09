@@ -37,6 +37,8 @@ let platformHeight = 18;
 let platformImg;
 
 let score = 0;
+let maxScore = 0; // // We need "temporary score" to store the score before it is updated
+let gameOver = false;
 
 // Load the game
 window.onload = function () {
@@ -47,18 +49,18 @@ window.onload = function () {
 
     // Load doodler images
     doodlerRightImg = new Image();
-    doodlerRightImg.src = "doodler-right.png";
+    doodlerRightImg.src = "images/doodler-right.png";
     doodler.img = doodlerRightImg;
     //To run a JavaScript function when an image is loaded
     doodlerRightImg.onload = function () {
         context.drawImage(doodler.img, doodler.x, doodler.y, doodler.width, doodler.height);
         
     doodlerLeftImg = new Image();
-    doodlerLeftImg.src = "doodler-left.png";
+    doodlerLeftImg.src = "images/doodler-left.png";
 
     // Load platform image
     platformImg = new Image();
-    platformImg.src = "platform.png";
+    platformImg.src = "images/platform.png";
 
     velocityY = initialVelocityY; // Set initial jump velocity
 
@@ -73,6 +75,10 @@ window.onload = function () {
 
 function Update() {
     requestAnimationFrame(Update);
+    if (gameOver) {
+        return; // Stop the game, we don't update the canvas anymore
+    }
+
     // Clear the board
     context.clearRect(0, 0, board.width, board.height);
 
@@ -86,6 +92,10 @@ function Update() {
 
     velocityY += gravity; // Apply gravity
     doodler.y += velocityY; // Move player
+    if (doodler.y > boardHeight) { // If player goes off the bottom of the board
+        gameOver = true;
+    }
+
     context.drawImage(doodler.img, doodler.x, doodler.y, doodler.width, doodler.height);
 
     // Platforms
@@ -113,7 +123,11 @@ function Update() {
     updateScore();
     context.fillStyle = "black";
     context.font = "16px sans-serif";
-    context.fillText("Score: " + score, 10, 20);
+    context.fillText("Score: " + score, 5, 20);
+
+    if (gameOver) {
+        context.fillText("Game Over: Press 'Space' to Restart", boardWidth/7, boardHeight*6/8);
+    }
 }
 
 function moveDoodler(e) {
@@ -124,6 +138,24 @@ function moveDoodler(e) {
     else if (e.code == "ArrowLeft" || e.code == "KeyA") { //move left
         velocityX = -4;
         doodler.img = doodlerLeftImg;
+    }
+    else if (e.code == "Space" && gameOver) {
+        // Reset the game
+        doodler = {
+            img: doodlerRightImg,
+            x: doodlerX,
+            y: doodlerY,
+            width: doodlerWidth,
+            height: doodlerHeight
+        }
+
+        velocityX = 0;
+        velocityY = initialVelocityY; // Set initial jump velocity for a new game
+        score = 0;
+        maxScore = 0;
+        gameOver = false;
+        placePlatforms(); /* It clears the platform array (from the previous game),
+        assign a new array and creates new platforms */
     }
 }
 
@@ -179,4 +211,19 @@ function detectCollision(a,b) {
            a.x + a.width > b.x && // This line checks if the right edge of object a is to the right of the left edge of object b
            a.y < b.y + b.height && // This line checks if the top edge of object a is above the bottom edge of object b.
            a.y + a.height > b.y; // This line checks if the bottom edge of object a is below the top edge of object b.
+}
+
+
+function updateScore() {
+    let points = Math.floor(50*Math.random()); // Random number between 0 and 49 (50*(0-1))
+    if (velocityY < 0) { /* the score has to grow only when we go up and
+                         it is a negative direction (velocityY is negative due to gravity) */
+        maxScore += points; // Add points to the temporary score
+        if (score < maxScore) { // If the score is less than the temporary score
+            score = maxScore; // Update the score
+            }
+    }
+    else if (velocityY >= 0) { // If we are falling down
+        maxScore -= points;  // Subtract points from the temporary score
+    }
 }
